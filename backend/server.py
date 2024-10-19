@@ -29,8 +29,6 @@ def vote():
     Output: whether or not majority have agreed 
     """
 
-@app.route
-
 # Run the application
 if __name__ == '__main__':
     app.run(debug=True)
