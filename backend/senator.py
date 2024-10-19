@@ -2,7 +2,7 @@ import json
  
 from uagents import Agent, Context, Model
 from uagents.setup import fund_agent_if_low
-from dialogues.chitchat import ChitChatDialogue
+from chitchat import ChitChatDialogue
  
 CHAT_AGENT_ADDRESS = "<your_agent_2_address>"
  
@@ -34,7 +34,6 @@ class RejectChitChatDialogue(Model):
 # Instantiate the dialogues
 chitchat_dialogue = ChitChatDialogue(
     version="0.1",
-    agent_address=agent.address,
 )
  
 # Get an overview of the dialogue structure
