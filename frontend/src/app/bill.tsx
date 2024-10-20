@@ -1,83 +1,135 @@
-import './bill.css';
+import "./bill.css";
 
 const ws = StartWebSocket();
+const voiceToKeyMap = new Map<string, string>();
+voiceToKeyMap.set("Boozman", "77b0d4ff-228a-42cf-9fb9-f92280e7a4eb");
+voiceToKeyMap.set("McConnell", "3763537f-21f8-42a3-a9b4-5baf2721f7e5");
+voiceToKeyMap.set("Stabenow", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
 
-async function PostStartSim() : Promise<string[]> {
-    const clauses_response = await fetch("http://localhost:8080/start_sim", {
-        method: "GET",
-    });
+async function PostStartSim(): Promise<string[]> {
+	const clauses_response = await fetch("http://localhost:8080/start_sim", {
+		method: "GET",
+	});
 
-    const clauses_json = await clauses_response.json();
+	const clauses_json = await clauses_response.json();
 
-    const clauses = clauses_json["clauses"];
+	const clauses = clauses_json["clauses"];
 
-    return clauses;
+	return clauses;
 }
 
 function StartWebSocket() {
-    const ws = new WebSocket("ws://localhost:8081");
+	const ws = new WebSocket("ws://localhost:8081");
 
-    ws.onopen = () => {
-        console.log("connected");
-    }
+	ws.onopen = () => {
+		console.log("connected");
+	};
 
-    ws.onmessage = (message) => {
-        console.log(message);
-    }
+	ws.onmessage = (message) => {
+		console.log(message);
+	};
 
-    ws.onclose = () => {
-        console.log("disconnected");
-    }
+	ws.onclose = () => {
+		console.log("disconnected");
+	};
 
-    return ws;
+	return ws;
 }
 
-function CreateClauses(clauses: string[], setActiveClause: (activeClause: number) => void) {
-    const clauses_divs = [];
+function CreateClauses(
+	clauses: string[],
+	setActiveClause: (activeClause: number) => void,
+	tts: any,
+	speaker: string,
+	dialogue: string
+) {
+	const clauses_divs = [];
 
-    for (let i = 0; i < clauses.length; i++) {
-        const clause = clauses[i];
+	for (let i = 0; i < clauses.length; i++) {
+		const clause = clauses[i];
 
-        const onClick = () => {
-            setActiveClause(i);
-        }
+		const onClick = async () => {
+			setActiveClause(i);
+			console.log("im here");
 
-        clauses_divs.push(
-            <div className="bill-section" onClick={onClick} key={i} dangerouslySetInnerHTML={{__html: clause}}>
-            </div>
-        );
-    }
+			const response = await tts.buffer({
+				model_id: "sonic-english",
+				voice: {
+					mode: "id",
+					id: voiceToKeyMap.get(speaker),
+				},
+				transcript: dialogue,
+			});
+			await tts.play();
+		};
 
-    return clauses_divs;
+		clauses_divs.push(
+			<div
+				className="bill-section"
+				onClick={() => {
+					onClick();
+				}}
+				key={i}
+				dangerouslySetInnerHTML={{ __html: clause }}
+			></div>
+		);
+	}
+
+	return clauses_divs;
 }
 
-export function Clauses({ clauses, setActiveClause }: { clauses: string[], setActiveClause: (activeClause: number) => void }) {
-    const clauses_divs = CreateClauses(clauses, setActiveClause);
+export function Clauses({
+	clauses,
+	setActiveClause,
+	tts,
+	dialogue,
+	speaker,
+}: {
+	clauses: string[];
+	setActiveClause: (activeClause: number) => void;
+	tts: any;
+	dialogue: string;
+	speaker: string;
+}) {
+	const clauses_divs = CreateClauses(
+		clauses,
+		setActiveClause,
+		tts,
+		dialogue,
+		speaker
+	);
 
-    return (
-        <div>
-            <h1 id="bill-section-title">proposed bill</h1>
-            {clauses_divs}
-        </div>
-    )
+	return (
+		<div>
+			<h1 id="bill-section-title">proposed bill</h1>
+			{clauses_divs}
+		</div>
+	);
 }
 
-export function StartSim({ setHasStarted, setClauses }: { setHasStarted: (hasStarted: boolean) => void, setClauses: (clauses: string[]) => void }) {
+export function StartSim({
+	setHasStarted,
+	setClauses,
+}: {
+	setHasStarted: (hasStarted: boolean) => void;
+	setClauses: (clauses: string[]) => void;
+}) {
+	const startSim = async () => {
+		const clauses = await PostStartSim();
 
-    
-    const startSim = async () => {
-        const clauses = await PostStartSim();
+		setClauses(clauses);
+		setHasStarted(true);
+	};
 
-        setClauses(clauses);
-        setHasStarted(true);
-    }
+	return (
+		<div id="start-sim-section">
+			<h1 id="bill-section-title">let the senate begin!</h1>
 
-    return (
-        <div id="start-sim-section">
-            <h1 id="bill-section-title">let the senate begin!</h1>
-
-            <button onClick={() => startSim()} type="button" id="start-button" 
-                className="text-gray-900
+			<button
+				onClick={() => startSim()}
+				type="button"
+				id="start-button"
+				className="text-gray-900
                            bg-white
                            border 
                            border-gray-300
@@ -89,7 +141,10 @@ export function StartSim({ setHasStarted, setClauses }: { setHasStarted: (hasSta
                            px-5
                            py-2.5
                            me-2
-                           mb-2">start</button>
-        </div>
-    )
+                           mb-2"
+			>
+				start
+			</button>
+		</div>
+	);
 }
