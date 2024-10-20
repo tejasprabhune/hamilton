@@ -16,7 +16,7 @@ def start_sim():
     Starts the simulation. Processes a bill into a list of clauses and returns them.
     """
 
-    clauses = {"clauses": open_bill()}
+    clauses = {"clauses": open_bill()[0]}
     return clauses
 
 @app.route('/initial-agreement-level')

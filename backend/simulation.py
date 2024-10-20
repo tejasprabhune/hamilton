@@ -4,15 +4,18 @@ from groq import Groq
 from senator import Senator
 import numpy as np
 
+import websockets
 
-class SenatorDebate:
-    def __init__(self, agent1: str, agent2: str, agent_data, websocket, clause, clause_id):
-        pass
+from senator_debate import SenatorDebate
 
-    async def start_debate(self):
-        await asyncio.sleep(1)
-        print("hiiiiiii")
-
+# class SenatorDebate:
+#     def __init__(self, agent1: str, agent2: str, agent_data, websocket, clause, clause_id):
+#         pass
+# 
+#     async def start_debate(self):
+#         await asyncio.sleep(1)
+#         print("hiiiiiii")
+# 
 def open_bill():
     """
     Opens the bill and returns the clauses in a list.
@@ -23,23 +26,32 @@ def open_bill():
         bill_lines = bill.readlines()
 
         clauses = []
+        clauses_html = []
 
+        current_clause_html = ""
         current_clause = ""
 
+
         for i in range(len(bill_lines)):
-            bill_lines[i] = parse_line(bill_lines[i])
-            if "SECTION" in bill_lines[i]:
+            parsed_line = parse_line(bill_lines[i])
+            if "SECTION" in parsed_line:
                 if current_clause:
+                    clauses_html.append(current_clause_html)
                     clauses.append(current_clause)
                     current_clause = ""
+                current_clause_html = parsed_line
                 current_clause += bill_lines[i]
             else:
+                current_clause_html += parsed_line
                 current_clause += bill_lines[i]
 
         clauses.append(current_clause)
+        clauses_html.append(current_clause_html)
 
+        for i in range(len(clauses)):
+            print(clauses[i])
 
-    return clauses
+    return clauses_html, clauses
 
 def parse_line(line):
     """
@@ -107,7 +119,7 @@ class Simulation():
 
         tweets, websites, votes = data
 
-        return { "tweets": tweets, "websites": websites, "votes": votes }
+        return { "tweets": tweets, "website": websites, "voting": votes }
 
     def get_all_senator_data(self, clause: str) -> dict[str, dict[str, list[str]]]:
         """
@@ -117,8 +129,8 @@ class Simulation():
             {
                 "senator1_name": {
                                     "tweets": list[str],
-                                    "websites": list[str],
-                                    "votes": list[str]
+                                    "website": list[str],
+                                    "voting": list[str]
                                  }
             }
         """
@@ -137,7 +149,7 @@ class Simulation():
             messages=[
                 {
                     "role": "user",
-                    "content": f"You will be provided a clause in a bill, a senator's past tweets, websites, and voted bills. Please output ONE integer from 0 to 1 that represents how aligned the senator is with the clause. Here are the senator's past tweets: {senator_data['tweets']} Here are the senator's past websites: {senator_data['websites']} Here are the senator's past voted bills: {senator_data['votes']}. Here is the clause: {clause}. Output NOTHING ELSE other than the single integer representing alignment.",
+                    "content": f"You will be provided a clause in a bill, a senator's past tweets, websites, and voted bills. Please output ONE integer from 0 to 1 that represents how aligned the senator is with the clause. Here are the senator's past tweets: {senator_data['tweets']} Here are the senator's past websites: {senator_data['website']} Here are the senator's past voted bills: {senator_data['voting']}. Here is the clause: {clause}. Output NOTHING ELSE other than the single integer representing alignment.",
                 }
             ],
             model="llama3-8b-8192",
@@ -190,17 +202,25 @@ class Simulation():
                             second_senator.name: all_senator_data[second_senator.name]
                           }
 
-            debate = SenatorDebate(first_senator.name, second_senator.name, websocket, debate_data, clause, i)
+            debate = SenatorDebate(first_senator.name, second_senator.name, debate_data, self.websocket, clause, i)
+
+            print(debate.start_debate())
 
             tasks.append(asyncio.create_task(debate.start_debate()))
 
         for i in range(len(self.senators)):
             await tasks[i]
 
-async def main():
-    clauses = open_bill()
-    simulation = Simulation(clauses, "")
+async def main(websocket):
+    clauses = open_bill()[1]
+
+    simulation = Simulation(clauses, websocket)
+
     await simulation.start_simulation()
 
+async def create_websocket():
+    async with websockets.serve(main, "localhost", 8765):
+        await asyncio.Future()
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(create_websocket())

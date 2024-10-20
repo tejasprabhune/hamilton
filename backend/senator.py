@@ -28,7 +28,6 @@ class Senator:
             self.data[2] = json.load(f)
 
         self.tweets, self.websites, self.votes = self.data
-        self.collections = []
 
         if init_db:
             self.create_db()
