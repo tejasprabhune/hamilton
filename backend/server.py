@@ -1,10 +1,16 @@
 from flask import Flask
 from flask_cors import CORS
-
+from simulation import create_websocket
 from simulation import open_bill
+import asyncio
 
 app = Flask(__name__)
 CORS(app)
+
+# asyncio.run(create_websocket())
+
+
+
 
 @app.route('/')
 def home():
@@ -15,7 +21,6 @@ def start_sim():
     """
     Starts the simulation. Processes a bill into a list of clauses and returns them.
     """
-
     clauses = {"clauses": open_bill()[0]}
     return clauses
 

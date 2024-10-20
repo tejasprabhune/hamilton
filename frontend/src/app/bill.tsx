@@ -1,12 +1,10 @@
 import "./bill.css";
 
-import { cartesiaConnection } from "@/components/TestCartesia";
+import { useTTS } from '@cartesia/cartesia-js/react';
 
-const ws = StartWebSocket();
-const voiceToKeyMap = new Map<string, string>();
-voiceToKeyMap.set("Boozman", "77b0d4ff-228a-42cf-9fb9-f92280e7a4eb");
-voiceToKeyMap.set("McConnell", "3763537f-21f8-42a3-a9b4-5baf2721f7e5");
-voiceToKeyMap.set("Stabenow", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
+// import { cartesiaConnection } from "@/components/TestCartesia";
+
+// const ws = StartWebSocket();
 
 async function PostStartSim(): Promise<string[]> {
 	const clauses_response = await fetch("http://localhost:8080/start_sim", {
@@ -20,57 +18,90 @@ async function PostStartSim(): Promise<string[]> {
 	return clauses;
 }
 
-function StartWebSocket() {
-	const ws = new WebSocket("ws://localhost:8081");
+// function StartWebSocket() {
+// 	const ws = new WebSocket("ws://localhost:8765");
 
-	ws.onopen = () => {
-		console.log("connected");
-	};
+// 	ws.onopen = () => {
+// 		console.log("connected");
+// 	};
 
-	ws.onmessage = (message) => {
-		console.log(message);
-	};
+// 	ws.onmessage = (message) => {
+// 		console.log(message);
+// 		const payload = JSON.parse(message.data);
+// 		const clauseId = payload["clause_id"];
+// 		const dialogue = payload["dialogue"];
+// 		const speaker = payload["speaker"];
+// 		const clause = payload["clause"];
+		
+// 		clauseIdToQueue[clauseId].push(payload);
 
-	ws.onclose = () => {
-		console.log("disconnected");
-	};
+// 		console.log(message);
+// 	};
 
-	return ws;
-}
+// 	ws.onclose = () => {
+// 		console.log("disconnected");
+// 	};
+
+// 	return ws;
+// }
 
 function CreateClauses(
 	clauses: string[],
 	setActiveClause: (activeClause: number) => void,
-	tts: any,
-	speaker: string,
-	dialogue: string
+	clauseIdToQueue: any
 ) {
 	const clauses_divs = [];
+	const voiceToKeyMap = new Map<string, string>();
+	voiceToKeyMap.set("John Boozman", "77b0d4ff-228a-42cf-9fb9-f92280e7a4eb");
+	voiceToKeyMap.set("Mitch McConnell", "3763537f-21f8-42a3-a9b4-5baf2721f7e5");
+	voiceToKeyMap.set("Debbie Stabenow", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
+	voiceToKeyMap.set("Cory Booker", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
+	voiceToKeyMap.set("Mike Braun", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
+	voiceToKeyMap.set("Amy Klobuchar", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
+
 
 	for (let i = 0; i < clauses.length; i++) {
 		const clause = clauses[i];
 
 		const onClick = async () => {
 			setActiveClause(i);
-
-			const response = await tts.buffer({
-				model_id: "sonic-english",
-				voice: {
-					mode: "id",
-					id: voiceToKeyMap.get(speaker),
-				},
-				transcript: dialogue,
-			});
-
-			await tts.play();
 		};
+
+        const tts = useTTS({
+            apiKey: "06f02b5d-3c2a-4f4b-8ab6-6d40d392e602",
+            sampleRate: 44100,
+        })
+
+        const handlePlay = async (dialogue, voiceId) => {
+
+            console.log("============== voiceId", voiceId);
+            console.log("============== dialogue", dialogue);
+            // Begin buffering the audio.
+            const response = await tts.buffer({
+                model_id: "sonic-english",
+                voice: {
+                    mode: "id",
+                    id: voiceId,
+                },
+                transcript: dialogue,
+            });
+
+            // Immediately play the audio. (You can also buffer in advance and play later.)
+            await tts.play();
+        }
 
 		clauses_divs.push(
 			<div
 				className="bill-section"
 				onClick={() => {
 					// onClick();
-                    cartesiaConnection();
+					const mostRecentClause = clauseIdToQueue[i][clauseIdToQueue[i].length - 1];
+                    console.log("============== most recent clause", 
+                                mostRecentClause["dialogue"], 
+                                mostRecentClause["senator"]);
+
+                    // cartesiaConnection(mostRecentClause["dialogue"], voiceToKeyMap.get(mostRecentClause["senator"] )?? '');
+                    handlePlay(mostRecentClause["dialogue"], voiceToKeyMap.get(mostRecentClause["senator"] ) ?? '1bbfa288-2a6f-41c4-aaa6-0635947c0f54');
 				}}
 				key={i}
 				dangerouslySetInnerHTML={{ __html: clause }}
@@ -84,22 +115,18 @@ function CreateClauses(
 export function Clauses({
 	clauses,
 	setActiveClause,
-	tts,
-	dialogue,
-	speaker,
+	clauseIdToQueue,
 }: {
 	clauses: string[];
 	setActiveClause: (activeClause: number) => void;
-	tts: any;
 	dialogue: string;
 	speaker: string;
+	clauseIdToQueue: any;
 }) {
 	const clauses_divs = CreateClauses(
 		clauses,
 		setActiveClause,
-		tts,
-		dialogue,
-		speaker
+		clauseIdToQueue
 	);
 
 	return (
@@ -113,12 +140,20 @@ export function Clauses({
 export function StartSim({
 	setHasStarted,
 	setClauses,
+    clauseIdToQueue,
 }: {
 	setHasStarted: (hasStarted: boolean) => void;
 	setClauses: (clauses: string[]) => void;
+    clauseIdToQueue: Array<Array<any>>;
 }) {
 	const startSim = async () => {
 		const clauses = await PostStartSim();
+
+        for (let i = 0; i < clauses.length; i++) {
+            console.log("adding to clause_ids");
+            clauseIdToQueue[i] = new Array<any>();
+            clauseIdToQueue[i].push(clauses[i]);
+        }
 
 		setClauses(clauses);
 		setHasStarted(true);

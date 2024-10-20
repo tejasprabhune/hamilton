@@ -2,6 +2,7 @@ import os
 import autogen
 import json
 from groq import Groq
+import asyncio
 
 os.environ["AUTOGEN_USE_DOCKER"] = "0"
 
@@ -44,7 +45,7 @@ class SenatorDebate:
             name="Init",
         )
 
-        # self.socket = socket
+        self.socket = socket
 
         self.agent1 = autogen.AssistantAgent(
             name=senator_names[agent1],
@@ -107,6 +108,7 @@ class SenatorDebate:
                     model="llama3-8b-8192",
                 )
                 self.clause = chat_completion.choices[0].message.content
+                asyncio.create_task(self.socket.send(json.dumps({"clause": self.clause, "clause_id": self.clause_id, "dialogue": content, "senator": self.agent1.name})))
                 print(self.clause)
                 return self.agent2
             elif last_speaker is self.agent2:
@@ -123,6 +125,7 @@ class SenatorDebate:
                     model="llama3-8b-8192",
                 )
                 self.clause = chat_completiony.choices[0].message.content
+                asyncio.create_task(self.socket.send(json.dumps({"clause": self.clause, "clause_id": self.clause_id, "dialogue": contenty, "senator": self.agent2.name})))
                 print(self.clause)
                 return None
             else:

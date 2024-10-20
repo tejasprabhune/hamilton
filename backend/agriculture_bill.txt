@@ -9,36 +9,3 @@ Congress finds that:
 (1) The State of Delaware has experienced significant rainfall shortages, threatening agricultural productivity and economic stability;
 (2) Traditional water management approaches have proven insufficient to address these challenges;
 (3) Innovative solutions are required to ensure sustainable water resources for agricultural and public use.
-SECTION 3. ESTABLISHMENT OF THE DELAWARE AGRICULTURAL WATER INNOVATION PROGRAM.
-(a) IN GENERAL.—The Secretary of Agriculture shall establish the Delaware Agricultural Water Innovation Program to:
-(1) Implement advanced rainfall capture and storage systems;
-(2) Develop smart irrigation networks;
-(3) Create agricultural water trading markets.
-(b) SMART IRRIGATION INFRASTRUCTURE.—
-(1) The Secretary shall allocate $150,000,000 for the installation of IoT-enabled irrigation systems that:
-(A) Monitor soil moisture in real-time;
-(B) Adjust water distribution based on predictive analytics;
-(C) Integrate with weather forecasting systems.
-SECTION 4. WATER TRADING MARKET PILOT PROGRAM.
-(a) ESTABLISHMENT.—The Secretary shall establish a blockchain-based water-rights trading platform that:
-(1) Allows farmers to buy, sell, or lease water rights;
-(2) Creates a transparent marketplace for water allocation;
-(3) Incentivizes water conservation through market mechanisms.
-(b) PARTICIPATION INCENTIVES.—
-(1) Tax credits for farmers who:
-(A) Achieve verified water savings;
-(B) Participate in the water trading market;
-(C) Implement approved water conservation technologies.
-SECTION 5. FUNDING AND AUTHORIZATION.
-(a) AUTHORIZATION OF APPROPRIATIONS.—There are authorized to be appropriated:
-(1) $250,000,000 for fiscal years 2025 through 2029 to carry out this Act;
-(2) Such sums as may be necessary for administrative costs.
-(b) COST-SHARING REQUIREMENTS.—
-(1) The Federal share of any project under this Act shall not exceed 75 percent;
-(2) State and private entities shall provide the remaining 25 percent through cash or in-kind contributions.
-SECTION 6. REPORTING REQUIREMENTS.
-(a) ANNUAL REPORT.—The Secretary shall submit to Congress an annual report on:
-(1) Program implementation progress;
-(2) Water conservation achievements;
-(3) Economic impacts on agricultural communities;
-(4) Recommendations for program improvements.

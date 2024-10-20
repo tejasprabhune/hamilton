@@ -1,3 +1,4 @@
+import json
 import re
 import asyncio
 from groq import Groq
@@ -193,7 +194,7 @@ class Simulation():
         
 
         tasks = []
-        for i, clause in enumerate(self.clauses):
+        for i, clause in enumerate(self.clauses[:1]):
             all_senator_data: dict[str, dict[str, list[str]]] = self.get_all_senator_data(clause)
             first_senator, second_senator = self.choose_senators(clause, all_senator_data)
 
@@ -208,11 +209,18 @@ class Simulation():
 
             tasks.append(asyncio.create_task(debate.start_debate()))
 
-        for i in range(len(self.senators)):
+        for i in range(len(tasks)):
             await tasks[i]
 
 async def main(websocket):
-    clauses = open_bill()[1]
+    clauses_html, clauses = open_bill()
+
+    # await websocket.send(json.dumps({
+    #     "event": "clauses",
+    #     "payload": clauses_html,
+    # }))
+
+    print("========================================")
 
     simulation = Simulation(clauses, websocket)
 
