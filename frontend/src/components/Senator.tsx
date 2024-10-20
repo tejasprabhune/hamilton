@@ -1,7 +1,30 @@
+import { useEffect, useRef } from "react";
 import "./Senator.css";
 
 export default function Senator(props: any) {
 	const haircolor = props.haircolor;
+	const mouthElement = useRef<HTMLDivElement>(null);
+
+	function startTalking() {
+		if (mouthElement.current) {
+			mouthElement.current.classList.add("mouth-talking");
+		}
+	}
+
+	function stopTalking() {
+		if (mouthElement.current) {
+			mouthElement.current.classList.remove("mouth-talking");
+		}
+	}
+
+	useEffect(() => {
+		if (props.talking) {
+			startTalking();
+		} else {
+			stopTalking();
+		}
+	}, []);
+
 	return (
 		<>
 			<div className="wrapper">
@@ -56,7 +79,10 @@ export default function Senator(props: any) {
 							<div className="eyebrow"></div>
 							<div className="eye"></div>
 						</div>
-						<div className="mouth"></div>
+						<div
+							className="mouth"
+							ref={mouthElement}
+						></div>
 						<div className="shadow-wrapper">
 							<div className="shadow"></div>
 						</div>
