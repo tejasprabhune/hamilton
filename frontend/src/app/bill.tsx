@@ -50,7 +50,6 @@ function CreateClauses(
 
 		const onClick = async () => {
 			setActiveClause(i);
-			console.log("im here");
 
 			const response = await tts.buffer({
 				model_id: "sonic-english",

@@ -1,39 +1,41 @@
 import { useTTS } from "@cartesia/cartesia-js/react";
-import { useEffect, useState } from "react";
-import dotenv from "dotenv";
+import { useState } from "react";
 
-dotenv.config();
-
-interface TextToSpeechProps {
-	speaker: "McConnell" | "Boozman" | "Stabenow";
-	dialogue: string;
-}
-
-const voiceToKeyMap = new Map<string, string>();
-voiceToKeyMap.set("Boozman", "77b0d4ff-228a-42cf-9fb9-f92280e7a4eb");
-voiceToKeyMap.set("McConnell", "3763537f-21f8-42a3-a9b4-5baf2721f7e5");
-voiceToKeyMap.set("Stabenow", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
-
-export default function TextToSpeech(props: TextToSpeechProps) {
+export default function TextToSpeech() {
 	const tts = useTTS({
 		apiKey: "06f02b5d-3c2a-4f4b-8ab6-6d40d392e602",
 		sampleRate: 44100,
 	});
+
+	const [text, setText] = useState("");
+
 	const handlePlay = async () => {
+		// Begin buffering the audio.
 		const response = await tts.buffer({
 			model_id: "sonic-english",
 			voice: {
 				mode: "id",
-				id: voiceToKeyMap.get(props.speaker),
+				id: "a0e99841-438c-4a64-b679-ae501e7d6091",
 			},
-			transcript: props.dialogue,
+			transcript: text,
 		});
+
+		// Immediately play the audio. (You can also buffer in advance and play later.)
 		await tts.play();
 	};
 
-	useEffect(() => {
-		handlePlay();
-	}, []);
+	return (
+		<div>
+			<input
+				type="text"
+				value={text}
+				onChange={(event) => setText(event.target.value)}
+			/>
+			<button onClick={handlePlay}>Play</button>
 
-	return <></>;
+			<div>
+				{tts.playbackStatus} | {tts.bufferStatus} | {tts.isWaiting}
+			</div>
+		</div>
+	);
 }
