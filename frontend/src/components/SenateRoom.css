@@ -1,0 +1,36 @@
+#senate-room-main-div {
+	background-image: url("../assets/background.svg");
+	height: 100vh;
+	background-size: 300% auto; /* Zoom in by increasing width */
+	background-position: center; /* Center the zoomed image */
+	background-repeat: no-repeat; /* Prevent repetition */
+}
+
+#senator-male-1,
+#senator-male-2,
+#senator-female-1,
+#senator-female-2 {
+	transform: scale(0.4); /* Maintain scale */
+	position: absolute; /* Use absolute positioning inside the relative parent */
+}
+
+/* Adjust the positioning of each senator */
+#senator-male-1 {
+	top: 20%; /* Adjust based on the background image */
+	left: 20%; /* Use percentages to make it responsive */
+}
+
+#senator-male-2 {
+	top: 20%;
+	left: 30%;
+}
+
+#senator-female-1 {
+	top: 20%;
+	left: 40%;
+}
+
+/* #senator-female-2 {
+	top: 50%;
+	left: 70%;
+} */
