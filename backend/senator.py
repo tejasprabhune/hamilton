@@ -5,6 +5,7 @@ from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_
 
 import chromadb
 
+
 class Senator:
     def __init__(self, id, name):
         self.ef = ONNXMiniLM_L6_V2(preferred_providers=["CPUExecutionProvider"])
@@ -27,17 +28,20 @@ class Senator:
             self.data[2] = json.load(f)
 
         self.tweets, self.websites, self.votes = self.data
+        self.collections = []
 
     def __str__(self):
         return f"Senator {self.name} (ID: {self.id})"
 
     def create_db(self, skip_existing=True):
-        self.collections = []
-
         if skip_existing and Path(f"db/{self.name}").exists():
             client = chromadb.PersistentClient(path=f"db/{self.name}")
-            self.collections = [client.get_collection(label) for label in self.data_labels]
-            self.tweet_collection, self.website_collection, self.vote_collection = self.collections
+            self.collections = [
+                client.get_collection(label) for label in self.data_labels
+            ]
+            self.tweet_collection, self.website_collection, self.vote_collection = (
+                self.collections
+            )
 
             print(f"Database for {self.name} already exists. Skipping creation.")
             return
@@ -46,19 +50,29 @@ class Senator:
 
         for i, label in enumerate(self.data_labels[:2]):
             print(f"Creating collection for {label} data...")
-            collection = client.get_or_create_collection(label, embedding_function=self.ef)
-            collection.add(documents=self.data[i], ids=[str(i) for i in range(len(self.data[i]))])
+            collection = client.get_or_create_collection(
+                label, embedding_function=self.ef
+            )
+            collection.add(
+                documents=self.data[i], ids=[str(i) for i in range(len(self.data[i]))]
+            )
 
             self.collections.append(collection)
 
         print("Creating collection for voting data...")
-        voting_collection = client.get_or_create_collection("voting", embedding_function=self.ef)
-        voting_collection.add(documents=list(self.votes.keys()),
-                              metadatas=[{"key": vote} for vote in list(self.votes.values())], 
-                              ids=[str(i) for i in range(len(self.votes))])
+        voting_collection = client.get_or_create_collection(
+            "voting", embedding_function=self.ef
+        )
+        voting_collection.add(
+            documents=list(self.votes.keys()),
+            metadatas=[{"key": vote} for vote in list(self.votes.values())],
+            ids=[str(i) for i in range(len(self.votes))],
+        )
         self.collections.append(voting_collection)
 
-        self.tweet_collection, self.website_collection, self.vote_collection = self.collections
+        self.tweet_collection, self.website_collection, self.vote_collection = (
+            self.collections
+        )
 
         print(f"Database for {self.name} created.")
 
@@ -67,17 +81,22 @@ class Senator:
 
         print(f"Querying {label} data...")
         i = self.data_labels.index(label)
-        results.extend(self.collections[i].query(query_texts=query_texts, n_results=n_results)["documents"])
+        results.extend(
+            self.collections[i].query(query_texts=query_texts, n_results=n_results)[
+                "documents"
+            ]
+        )
 
         return results
-    
+
+
 if __name__ == "__main__":
 
     root = Path("../senator_data/tweet_data/")
 
     senator_names = [path.stem for path in root.iterdir()]
     print(senator_names)
-    
+
     senators = []
 
     for i, senator_name in enumerate(senator_names):
@@ -85,5 +104,5 @@ if __name__ == "__main__":
         senators.append(senator)
         senator.create_db()
 
-    print("Testing query \"Israel\":")
+    print('Testing query "Israel":')
     print(senators[2].query(["Israel"], n_results=3))
