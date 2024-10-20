@@ -1,10 +1,43 @@
 import "./bill.css";
 
-import { useTTS } from '@cartesia/cartesia-js/react';
+import { useTTS } from "@cartesia/cartesia-js/react";
+import { useState } from "react";
 
 // import { cartesiaConnection } from "@/components/TestCartesia";
 
 // const ws = StartWebSocket();
+
+const difflib = require("difflib");
+export function generateDiffHtml(string1, string2) {
+	console.log(string1, string2);
+	// Preprocessing
+	var s1 = string1.split("\n").map((line) => line + "\n");
+	var s2 = string2.split("\n").map((line) => line + "\n");
+	let d = new difflib.Differ();
+	let diff = d.compare(s1, s2);
+	// Convert iterator to an array
+	let diffArray = Array.from(diff);
+	function diffToHtml(diff) {
+		return diff
+			.map((line) => {
+				if (line.startsWith("- ")) {
+					return `<span style="background-color: #F0AFA3;">${line.slice(
+						2
+					)}</span>`;
+				} else if (line.startsWith("+ ")) {
+					return `<span style="background-color: #DDFFDD;">${line.slice(
+						2
+					)}</span>`;
+				} else if (line.startsWith("  ")) {
+					return line.slice(2);
+				}
+				return "";
+			})
+			.join("<br>\n");
+	}
+	let htmlContent = diffToHtml(diffArray);
+	return htmlContent;
+}
 
 async function PostStartSim(): Promise<string[]> {
 	const clauses_response = await fetch("http://localhost:8080/start_sim", {
@@ -32,7 +65,7 @@ async function PostStartSim(): Promise<string[]> {
 // 		const dialogue = payload["dialogue"];
 // 		const speaker = payload["speaker"];
 // 		const clause = payload["clause"];
-		
+
 // 		clauseIdToQueue[clauseId].push(payload);
 
 // 		console.log(message);
@@ -48,7 +81,8 @@ async function PostStartSim(): Promise<string[]> {
 function CreateClauses(
 	clauses: string[],
 	setActiveClause: (activeClause: number) => void,
-	clauseIdToQueue: any
+	clauseIdToQueue: any,
+	setClauses: (clauses: string[]) => void
 ) {
 	const clauses_divs = [];
 	const voiceToKeyMap = new Map<string, string>();
@@ -59,7 +93,6 @@ function CreateClauses(
 	voiceToKeyMap.set("Mike Braun", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
 	voiceToKeyMap.set("Amy Klobuchar", "1bbfa288-2a6f-41c4-aaa6-0635947c0f54");
 
-
 	for (let i = 0; i < clauses.length; i++) {
 		const clause = clauses[i];
 
@@ -67,44 +100,54 @@ function CreateClauses(
 			setActiveClause(i);
 		};
 
-        const tts = useTTS({
-            apiKey: "06f02b5d-3c2a-4f4b-8ab6-6d40d392e602",
-            sampleRate: 44100,
-        })
+		const tts = useTTS({
+			apiKey: "06f02b5d-3c2a-4f4b-8ab6-6d40d392e602",
+			sampleRate: 44100,
+		});
 
-        const handlePlay = async (dialogue, voiceId) => {
+		const handlePlay = async (dialogue, voiceId) => {
+			console.log("============== voiceId", voiceId);
+			console.log("============== dialogue", dialogue);
+			// Begin buffering the audio.
+			const response = await tts.buffer({
+				model_id: "sonic-english",
+				voice: {
+					mode: "id",
+					id: voiceId,
+				},
+				transcript: dialogue,
+			});
 
-            console.log("============== voiceId", voiceId);
-            console.log("============== dialogue", dialogue);
-            // Begin buffering the audio.
-            const response = await tts.buffer({
-                model_id: "sonic-english",
-                voice: {
-                    mode: "id",
-                    id: voiceId,
-                },
-                transcript: dialogue,
-            });
+			// Immediately play the audio. (You can also buffer in advance and play later.)
+			await tts.play();
+		};
 
-            // Immediately play the audio. (You can also buffer in advance and play later.)
-            await tts.play();
-        }
+		const [htmlContent, setHtmlContent] = useState(clause);
+		// let htmlContent = clause;
 
 		clauses_divs.push(
 			<div
 				className="bill-section"
 				onClick={() => {
 					// onClick();
-					const mostRecentClause = clauseIdToQueue[i][clauseIdToQueue[i].length - 1];
-                    console.log("============== most recent clause", 
-                                mostRecentClause["dialogue"], 
-                                mostRecentClause["senator"]);
+					const mostRecentClause =
+						clauseIdToQueue[i][clauseIdToQueue[i].length - 1];
+					console.log(
+						"============== most recent clause",
+						mostRecentClause["dialogue"],
+						mostRecentClause["senator"]
+					);
+					console.log(...clauses.slice(0, i));
 
-                    // cartesiaConnection(mostRecentClause["dialogue"], voiceToKeyMap.get(mostRecentClause["senator"] )?? '');
-                    handlePlay(mostRecentClause["dialogue"], voiceToKeyMap.get(mostRecentClause["senator"] ) ?? '1bbfa288-2a6f-41c4-aaa6-0635947c0f54');
+					// cartesiaConnection(mostRecentClause["dialogue"], voiceToKeyMap.get(mostRecentClause["senator"] )?? '');
+					handlePlay(
+						mostRecentClause["dialogue"],
+						voiceToKeyMap.get(mostRecentClause["senator"]) ??
+							"1bbfa288-2a6f-41c4-aaa6-0635947c0f54"
+					);
 				}}
 				key={i}
-				dangerouslySetInnerHTML={{ __html: clause }}
+				dangerouslySetInnerHTML={{ __html: htmlContent }}
 			></div>
 		);
 	}
@@ -116,17 +159,20 @@ export function Clauses({
 	clauses,
 	setActiveClause,
 	clauseIdToQueue,
+	setClauses,
 }: {
 	clauses: string[];
 	setActiveClause: (activeClause: number) => void;
 	dialogue: string;
 	speaker: string;
 	clauseIdToQueue: any;
+	setClauses: (clauses: string[]) => void;
 }) {
 	const clauses_divs = CreateClauses(
 		clauses,
 		setActiveClause,
-		clauseIdToQueue
+		clauseIdToQueue,
+		setClauses
 	);
 
 	return (
@@ -140,20 +186,20 @@ export function Clauses({
 export function StartSim({
 	setHasStarted,
 	setClauses,
-    clauseIdToQueue,
+	clauseIdToQueue,
 }: {
 	setHasStarted: (hasStarted: boolean) => void;
 	setClauses: (clauses: string[]) => void;
-    clauseIdToQueue: Array<Array<any>>;
+	clauseIdToQueue: Array<Array<any>>;
 }) {
 	const startSim = async () => {
 		const clauses = await PostStartSim();
 
-        for (let i = 0; i < clauses.length; i++) {
-            console.log("adding to clause_ids");
-            clauseIdToQueue[i] = new Array<any>();
-            clauseIdToQueue[i].push(clauses[i]);
-        }
+		for (let i = 0; i < clauses.length; i++) {
+			console.log("adding to clause_ids");
+			clauseIdToQueue[i] = new Array<any>();
+			clauseIdToQueue[i].push(clauses[i]);
+		}
 
 		setClauses(clauses);
 		setHasStarted(true);

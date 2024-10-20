@@ -3,7 +3,7 @@ import { useTTS } from "@cartesia/cartesia-js/react";
 import SenateRoom from "@/components/SenateRoom";
 import { useEffect, useState } from "react";
 
-import { Clauses, StartSim } from "./bill";
+import { Clauses, generateDiffHtml, StartSim } from "./bill";
 
 let clauseIdToQueue = new Array<Array<any>>();
 
@@ -25,10 +25,22 @@ function StartWebSocket(setClauses: (clauses: string[]) => void) {
 		const speaker = payload["senator"];
 		const clause = payload["clause"];
 
-        if (clauseIdToQueue[clauseId] === undefined) {
-            clauseIdToQueue[clauseId] = [];
-        }
-		
+		if (clauseIdToQueue[clauseId] === undefined) {
+			clauseIdToQueue[clauseId] = [];
+		}
+
+		const htmlDiff = generateDiffHtml(
+			clauseIdToQueue[clauseId][clauseIdToQueue[clauseId].length - 1],
+			clause
+		);
+
+		console.log("HTML DIFF ===========================");
+		console.log(htmlDiff);
+		let current_clauses = new Array<string>();
+		for (let i = 0; i < current_clauses.length; i++) {
+			current_clauses.push(clauseIdToQueue[i][clauseIdToQueue[i].length - 1]);
+		}
+		setClauses(current_clauses);
 		clauseIdToQueue[clauseId].push(payload);
 	};
 
@@ -45,7 +57,7 @@ export default function Home() {
 	const [speaker, setActiveSpeaker] = useState("Boozman");
 	const [dialogue, setActiveDialogue] = useState("Hi there");
 	const [hasStarted, setHasStarted] = useState(false);
-	
+
 	useEffect(() => {
 		const ws = StartWebSocket(setClauses);
 	}, []);
@@ -69,13 +81,14 @@ export default function Home() {
 						setActiveClause={setActiveClause}
 						speaker={speaker}
 						dialogue={dialogue}
-					clauseIdToQueue={clauseIdToQueue}
+						clauseIdToQueue={clauseIdToQueue}
+						setClauses={setClauses}
 					/>
 				) : (
 					<StartSim
 						setHasStarted={setHasStarted}
 						setClauses={setClauses}
-                        clauseIdToQueue={clauseIdToQueue}
+						clauseIdToQueue={clauseIdToQueue}
 					/>
 				)}
 			</div>

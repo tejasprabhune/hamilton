@@ -11,6 +11,7 @@
   "dependencies": {
     "@cartesia/cartesia-js": "^1.1.0",
     "buffer": "^6.0.3",
+    "difflib": "^0.2.4",
     "dotenv": "^16.4.5",
     "fast-base64": "^0.1.8",
     "next": "14.2.15",
