@@ -9,9 +9,18 @@
 #senator-male-1,
 #senator-male-2,
 #senator-female-1,
-#senator-female-2 {
+#senator-female-2,
+#senator-female-3,
+#senator-female-4 {
 	transform: scale(0.4); /* Maintain scale */
 	position: absolute; /* Use absolute positioning inside the relative parent */
+}
+
+#zoom-in {
+	transform: scale(0.6);
+	/* position: absolute;
+	bottom: 0;
+	left: 0; */
 }
 
 /* Adjust the positioning of each senator */
@@ -30,7 +39,17 @@
 	left: 40%;
 }
 
-/* #senator-female-2 {
-	top: 50%;
-	left: 70%;
-} */
+#senator-female-2 {
+	top: 20%;
+	left: 50%;
+}
+
+#senator-female-3 {
+	top: 20%;
+	left: 10%;
+}
+
+#senator-female-4 {
+	top: 20%;
+	left: 0%;
+}
