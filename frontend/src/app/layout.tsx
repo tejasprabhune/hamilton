@@ -25,7 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://use.typekit.net/ugi7azv.css" />
+      </head>
       <body
+        style={{ maxWidth: "100%" }}
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}

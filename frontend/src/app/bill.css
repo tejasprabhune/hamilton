@@ -1,0 +1,53 @@
+#start-sim-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.bill-section {
+    background-color: #ffffff;
+    margin: 3em;
+    border-radius: 1em;
+    min-height: 5em;
+
+    padding: 2em;
+
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.bill-section:hover {
+    background-color: #f0f0f0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.bill-section:active {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.clause-text {
+    color: black;
+
+    word-wrap: break-word;
+    text-align: justify;
+
+    font-family: "futura-pt", sans-serif;
+    font-size: 1.5em;
+}
+
+#bill-section-title {
+    text-align: center;
+    font-size: 4em;
+    margin: 0.5em;
+
+    font-family: "futura-pt", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+#start-button {
+    font-size: 2em;
+    font-family: "futura-pt", sans-serif;
+    font-weight: 400;
+}
