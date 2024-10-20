@@ -31,8 +31,17 @@ class Senator:
     def __str__(self):
         return f"Senator {self.name} (ID: {self.id})"
 
-    def create_db(self):
+    def create_db(self, skip_existing=True):
         self.collections = []
+
+        if skip_existing and Path(f"db/{self.name}").exists():
+            client = chromadb.PersistentClient(path=f"db/{self.name}")
+            self.collections = [client.get_collection(label) for label in self.data_labels]
+            self.tweet_collection, self.website_collection, self.vote_collection = self.collections
+
+            print(f"Database for {self.name} already exists. Skipping creation.")
+            return
+
         client = chromadb.PersistentClient(path=f"db/{self.name}")
 
         for i, label in enumerate(self.data_labels[:2]):
@@ -52,10 +61,23 @@ class Senator:
         self.tweet_collection, self.website_collection, self.vote_collection = self.collections
 
         print(f"Database for {self.name} created.")
+
+    def query(self, query_texts, n_results=10, label="tweet"):
+        results = []
+
+        print(f"Querying {label} data...")
+        i = self.data_labels.index(label)
+        results.extend(self.collections[i].query(query_texts=query_texts, n_results=n_results)["documents"])
+
+        return results
     
 if __name__ == "__main__":
+
+    root = Path("../senator_data/tweet_data/")
+
+    senator_names = [path.stem for path in root.iterdir()]
+    print(senator_names)
     
-    senator_names = ["boozman", "stabenow"]
     senators = []
 
     for i, senator_name in enumerate(senator_names):
@@ -64,6 +86,4 @@ if __name__ == "__main__":
         senator.create_db()
 
     print("Testing query \"Israel\":")
-    result = senators[0].tweet_collection.query(query_texts=["Israel"], n_results=3)
-    
-    print(result)
+    print(senators[2].query(["Israel"], n_results=3))
