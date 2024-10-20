@@ -1,5 +1,5 @@
 #senate-room-main-div {
-	background-image: url("../assets/background.svg");
+	background-image: url("../assets/background.jpg");
 	height: 100vh;
 	background-size: 300% auto; /* Zoom in by increasing width */
 	background-position: center; /* Center the zoomed image */
