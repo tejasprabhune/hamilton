@@ -1,13 +1,18 @@
 import Cartesia from "@cartesia/cartesia-js";
 
+const audioContext = new window.AudioContext();
+
 function base64ToArrayBuffer(base64: string) {
 	const binaryString = window.atob(base64);
 	const len = binaryString.length;
 	const bytes = new Uint8Array(len);
 
-	for (let i = 0; i < len; i++) {
+	for (let i = 0; i < len; i += 3) {
 		bytes[i] = binaryString.charCodeAt(i);
+        bytes[i + 1] = binaryString.charCodeAt(i + 1);
+        bytes[i + 2] = binaryString.charCodeAt(i + 2);
 	}
+
 
 	return bytes.buffer;
 }
@@ -30,6 +35,8 @@ async function playPCMFromBase64(
 ) {
 	// Convert ArrayBuffer to Float32Array
 	const pcmData = new Float32Array(arrayBuffer);
+
+    console.log(pcmData);
 
 	// Create an AudioContext
 	const audioContext = new window.AudioContext();
@@ -82,7 +89,7 @@ export async function cartesiaConnection() {
 	}
 
 	// Create a stream.
-	const response = await websocket.send({
+	const response = websocket.send({
 		model_id: "sonic-english",
 		voice: {
 			mode: "id",
@@ -93,31 +100,41 @@ export async function cartesiaConnection() {
 		// The WebSocket sets output_format on your behalf.
 	});
 
-	let i = 0;
-	let arr: Array<any> = [];
-	let first_chunk: Array<any> = [];
+    let chunks = [];
+    let setFirstChunk = false;
+    let firstChunk = null;
+
 	// Access the raw messages from the WebSocket.
 	response.on("message", async (message: any) => {
-		// Raw message.
-		if (first_chunk.length === 0) {
-			first_chunk.push(convertToAudioBuffer(JSON.parse(message).data));
-		}
-		const jsonparsed = JSON.parse(message);
-		if (jsonparsed.data) {
-			arr.push(convertToAudioBuffer(jsonparsed.data));
-			i++;
-		}
-		if (i === 10) {
-			i = 0;
-			playPCMFromBase64(arr);
-			arr = [];
-			arr.push(first_chunk);
-		}
+        console.log(message);
+
+        const parsedMessage = JSON.parse(message);
+
+        if (chunks.length > 30) {
+            let audioBuffer = convertToAudioBuffer(chunks.join(""));
+
+            if (!setFirstChunk) {
+                firstChunk = audioBuffer;
+            } else {
+                audioBuffer = new Uint8Array([...firstChunk, ...audioBuffer]);
+            }
+
+            playPCMFromBase64(audioBuffer);
+            chunks = [];
+            chunks.push(firstChunk);
+        }
+
+        if (parsedMessage.done) {
+            console.log("done");
+            console.log(chunks.length);
+            const audioBuffer = convertToAudioBuffer(chunks.join(""));
+            playPCMFromBase64(audioBuffer);
+
+            console.log(audioBuffer);
+        }
+
+        chunks.push(parsedMessage.data);
+
 	});
 
-	// You can also access messages using a for-await-of loop.
-	for await (const message of response.events("message")) {
-		// Raw message.
-		console.log("Received message:", message);
-	}
 }

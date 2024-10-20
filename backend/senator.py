@@ -6,7 +6,7 @@ from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_
 import chromadb
 
 class Senator:
-    def __init__(self, id, name):
+    def __init__(self, id, name, init_db=True):
         self.ef = ONNXMiniLM_L6_V2(preferred_providers=["CPUExecutionProvider"])
 
         self.id = id
@@ -27,6 +27,9 @@ class Senator:
             self.data[2] = json.load(f)
 
         self.tweets, self.websites, self.votes = self.data
+
+        if init_db:
+            self.create_db()
 
     def __str__(self):
         return f"Senator {self.name} (ID: {self.id})"

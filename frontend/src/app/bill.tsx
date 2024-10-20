@@ -1,5 +1,7 @@
 import "./bill.css";
 
+import { cartesiaConnection } from "@/components/TestCartesia";
+
 const ws = StartWebSocket();
 const voiceToKeyMap = new Map<string, string>();
 voiceToKeyMap.set("Boozman", "77b0d4ff-228a-42cf-9fb9-f92280e7a4eb");
@@ -59,6 +61,7 @@ function CreateClauses(
 				},
 				transcript: dialogue,
 			});
+
 			await tts.play();
 		};
 
@@ -66,7 +69,8 @@ function CreateClauses(
 			<div
 				className="bill-section"
 				onClick={() => {
-					onClick();
+					// onClick();
+                    cartesiaConnection();
 				}}
 				key={i}
 				dangerouslySetInnerHTML={{ __html: clause }}
